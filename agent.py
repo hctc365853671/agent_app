@@ -170,7 +170,10 @@ class TwoTools:
                         toolName.append(tool_name)
                         if tool_name == "getCorrelation":
                             tool_result = self.getCorrelation(args.get("question"))
-                            content = "\n".join(tool_result) 
+                            if tool_result:
+                                content = "\n".join(tool_result)
+                            else:
+                                content = "根据现有资料无法回答。"
                         elif tool_name == "getWeather":
                             city = args.get("city")
                             tool_result = self.getWeather(city)

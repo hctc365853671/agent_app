@@ -55,7 +55,6 @@ try:
                 st.session_state.history_session.append({"user_input": user_input, "ai_answer": ture_ai_answer})
                 st_waiting.empty()
                 # AI回答框
-                print(responseJson.get('tool_name'))
                 if "【category:weather】" in ai_answer:
                     st.info(ture_ai_answer, icon="🌤️")
                 elif "【category:product】" in ai_answer:
@@ -65,14 +64,20 @@ try:
         # 清空对话按钮逻辑
         if clear_button:
             rag_bot.messages = [{
-                "role": "system",
-                "content": "你是一个专业的产品助手。如果用户问天气请调用天气查询工具getWeather，如果客户要查产品知识库请调用getCorrelation工具，请严格根据参考资料回答，不要编造。如果资料不足，请回答：根据现有资料无法回答。"
-            }]
+                            "role": "system",
+                            "content": """你是一个专业的产品助手。
+                                        如果用户问天气请调用天气查询工具getWeather，如果客户要查产品知识库请调用getCorrelation工具。
+                                        回答结束，在输出的末尾单独一行输出标签：
+                                        如果是天气相关回答，输出【category:weather】
+                                        如果是投影仪产品相关回答，输出【category:product】
+                                        无关问题输出【category:other】
+                                        严格根据参考资料回答，不要编造。如果资料不足，请回答：根据现有资料无法回答。"""
+                        }]
             st.session_state.history_session = []
             st.rerun()
             
     with col_history:
-        st.sidebar.title("对话历史")
+        st.title("对话历史")
         st.divider()
         if st.session_state.history_session:
             for msg in st.session_state.history_session:
