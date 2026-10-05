@@ -1,0 +1,22 @@
+# 虚拟环境
+venv/
+.venv/
+
+# 向量数据库
+chroma_db/
+
+# python缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 环境密钥，绝对不能上传！
+.env
+
+# streamlit临时文件
+.streamlit/
+
+# 系统文件
+.DS_Store
+Thumbs.db
