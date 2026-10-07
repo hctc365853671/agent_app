@@ -2,6 +2,8 @@ import streamlit as st
 from agent import TwoTools
 import re
 
+import pdf_loader
+
 # 初始化 放在最顶部
 if "rag_bot" not in st.session_state:
     st.session_state.rag_bot = TwoTools()
@@ -36,6 +38,14 @@ try:
     with col_chat:
         st.title("智能助手")
         clear_button = st.button("清空对话")
+        #上传pdf文档补充知识库
+        upload_button_pdf = st.file_uploader("上传PDF文件，补充知识库", type=["pdf"])
+        if upload_button_pdf is not None:
+            # 读取PDF内容
+            pdf_content = pdf_loader.load_pdf(upload_button_pdf)
+            # 将PDF内容添加到知识库
+            rag_bot.collectionAdd(pdf_content)
+            st.success("✅ PDF已成功入库知识库")
 
         # ========== 表单区域 start ==========
         with st.form("chat_form", clear_on_submit=True):
@@ -69,7 +79,7 @@ try:
                                         如果用户问天气请调用天气查询工具getWeather，如果客户要查产品知识库请调用getCorrelation工具。
                                         回答结束，在输出的末尾单独一行输出标签：
                                         如果是天气相关回答，输出【category:weather】
-                                        如果是投影仪产品相关回答，输出【category:product】
+                                        如果是产品相关回答，输出【category:product】
                                         无关问题输出【category:other】
                                         严格根据参考资料回答，不要编造。如果资料不足，请回答：根据现有资料无法回答。"""
                         }]
