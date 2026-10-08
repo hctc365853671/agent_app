@@ -7,5 +7,3 @@ def load_pdf(file_path):
     for page in reader.pages:
         text += page.extract_text()
     return {pdf_title: text}
-
-print(load_pdf("docs/produce.pdf"))
