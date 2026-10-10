@@ -23,6 +23,7 @@ class TwoTools:
                                         无关问题输出【category:other】
                                         严格根据参考资料回答，不要编造。如果资料不足，请回答：根据现有资料无法回答。"""
                         }]
+    
     def collectionAdd(self, text: dict):
         text_base = self.build_knowledge_base(text)
         emb_list = []
@@ -163,9 +164,10 @@ class TwoTools:
                 
             ]
             toolName=[]
+            reference_materials=[]
             while True:
                 response=self.client.chat.completions.create(
-                    model="qwen-plus-2025-07-28",
+                    model="qwen3.7-plus",
                     messages=self.messages,
                     tools=tools,
                     tool_choice="auto"
@@ -180,6 +182,7 @@ class TwoTools:
                         if tool_name == "getCorrelation":
                             tool_result = self.getCorrelation(args.get("question"))
                             if tool_result:
+                                reference_materials.append(tool_result)
                                 content = "\n".join(tool_result)
                             else:
                                 content = "根据现有资料无法回答。"
@@ -200,6 +203,7 @@ class TwoTools:
                                 "code": 200,
                                 "message": "success",
                                 "data": msg.content,
+                                "reference":"".join(reference_materials[0])
                             }
                
 

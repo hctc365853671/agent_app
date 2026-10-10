@@ -1,7 +1,9 @@
 import streamlit as st
 from agent import TwoTools
-import re
+import re,os
 import pdf_loader
+
+
 
 # 初始化 放在最顶部
 if "rag_bot" not in st.session_state:
@@ -41,26 +43,35 @@ with col_up:
                 if not upload_button_pdf:
                     st.warning("请先选择PDF文件！")
                 else:
-                    # 暂存文件，标记处理中，立刻rerun锁定UI
-                    st.session_state.temp_pdf_file = upload_button_pdf
-                    st.session_state.up_file_names.append(upload_button_pdf.name)
-                    st.session_state.is_disabled=True
-                    st.rerun()
+                    # 暂存文件，标记处理中，立刻rerun锁定UI 
+                    if upload_button_pdf.name in st.session_state.up_file_names :
+                        st.session_state.is_disabled=False
+                        st.session_state.temp_pdf_file=None
+                        st.warning("文件名或则内容重复")
+                    else:
+                        st.session_state.temp_pdf_file = upload_button_pdf
+                        st.session_state.is_disabled=True
+                        st.rerun()
 
         # ======== 表单外部执行入库逻辑 ========
         if st.session_state.is_disabled and st.session_state.temp_pdf_file is not None:
             with st.spinner("正在解析PDF并入库..."):
-                pdf_content = pdf_loader.load_pdf(st.session_state.temp_pdf_file)
+                os.makedirs("docs/uploads",exist_ok=True)
+                save_path = os.path.join("docs/uploads", st.session_state.temp_pdf_file.name)
+                with open(save_path,"wb") as file:
+                    file.write(st.session_state.temp_pdf_file.getvalue())
+                
+                pdf_content = pdf_loader.load_pdf(save_path)
                 rag_bot.collectionAdd(pdf_content)
-            # ✅ 先展示成功提示，再清理变量
-            st.success(f"✅ PDF已成功入库知识库：{st.session_state.temp_pdf_file.name}")
+                st.session_state.up_file_names.append(st.session_state.temp_pdf_file.name)
             # 清理临时文件，解锁
             st.session_state.temp_pdf_file = None
             st.session_state.is_disabled=False
             st.rerun()
        
+
         if bool(st.session_state.up_file_names):
-            st.success("成功入库，现有库存有:"+str(st.session_state.up_file_names))
+            st.write("现有库存有:\n"+"\n".join(st.session_state.up_file_names))
         else:
             st.write("尚未上传知识库")
 
@@ -117,6 +128,9 @@ try:
                     st.info(ture_ai_answer, icon="🌤️")
                 elif "【category:product】" in ai_answer:
                     st.success(ture_ai_answer, icon="📦")
+                    ai_reference=responseJson.get("reference")
+                    if bool(ai_reference):
+                        st.success("参考资料为:"+ai_reference)
                 else:
                     st.warning(ai_answer, icon="⚠️")
         # 清空对话按钮逻辑

@@ -1,4 +1,5 @@
 from pypdf import PdfReader
+import hashlib
 
 def load_pdf(file_path):
     reader = PdfReader(file_path)
