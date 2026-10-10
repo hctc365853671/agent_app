@@ -1,5 +1,3 @@
-下面是一份完整、可直接覆盖使用的 `README.md`：
-
 ```markdown
 # 智能助手 Agent App
 

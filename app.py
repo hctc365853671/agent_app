@@ -129,7 +129,7 @@ try:
                 elif "【category:product】" in ai_answer:
                     st.success(ture_ai_answer, icon="📦")
                     ai_reference=responseJson.get("reference")
-                    if bool(ai_reference):
+                    if ai_reference:
                         st.success("参考资料为:"+ai_reference)
                 else:
                     st.warning(ai_answer, icon="⚠️")

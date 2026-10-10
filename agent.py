@@ -199,11 +199,17 @@ class TwoTools:
                             
                 else:
                     self.messages.append(msg)
+                    ref:str
+                    if reference_materials:
+                        ref="".join(reference_materials[0])
+                    else:
+                        ref=""
+                        
                     return {
                                 "code": 200,
                                 "message": "success",
                                 "data": msg.content,
-                                "reference":"".join(reference_materials[0])
+                                "reference":ref
                             }
                
 
