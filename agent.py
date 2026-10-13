@@ -1,7 +1,7 @@
 import json
 import os
-
 import chromadb
+from chromadb.errors import CollectionNotFoundError
 from dotenv import load_dotenv
 from openai import OpenAI
 import requests,pdf_loader
@@ -74,28 +74,38 @@ class TwoTools:
         )
         return requry["documents"][0]
 
+
+
     def depositRag(self, knowledge_base:list[str]):
         chroma_client=chromadb.PersistentClient("./chroma_db")
         try:
             collection=chroma_client.get_collection(name="product_knowledge")
-            # 判断集合里面有没有数据
             count = collection.count()
             if count > 0:
                 print("向量库已有数据，跳过入库")
                 return collection
-        except:
-            collection=chroma_client.create_collection(name="product_knowledge",metadata={"hnsw:space":"cosine"})
+        except CollectionNotFoundError:
+            # 仅集合不存在才新建
+            collection=chroma_client.create_collection(
+                name="product_knowledge",
+                metadata={"hnsw:space":"cosine"}
+            )
 
-        oneNum=1
-        for i in knowledge_base:
+        # 获取当前集合已有文档数量，接着后面的id继续编号，避免id重复
+        exist_count = collection.count()
+        oneNum = exist_count + 1
+
+        for text in knowledge_base:
+            embedding = self.get_ali_embedding(text)
             collection.add(
-                embeddings=[self.get_ali_embedding(i)],
-                documents=[i],
+                embeddings=[embedding],
+                documents=[text],
                 ids=[f"doc__{str(oneNum)}"],
             )
             oneNum+=1
-        print(f"入库完成，共{len(knowledge_base)}条")
+        print(f"入库完成，新增{len(knowledge_base)}条，集合总数据量：{collection.count()}")
         return collection
+
 
     def get_ali_embedding(self, text: str):
         resp = self.client.embeddings.create(
@@ -163,7 +173,6 @@ class TwoTools:
                 }
                 
             ]
-            toolName=[]
             reference_materials=[]
             while True:
                 response=self.client.chat.completions.create(
@@ -178,7 +187,6 @@ class TwoTools:
                     for tool_call in msg.tool_calls:
                         args = json.loads(tool_call.function.arguments)
                         tool_name = tool_call.function.name
-                        toolName.append(tool_name)
                         if tool_name == "getCorrelation":
                             tool_result = self.getCorrelation(args.get("question"))
                             if tool_result:
